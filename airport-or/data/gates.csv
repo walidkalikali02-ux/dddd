@@ -1,0 +1,7 @@
+gate,max_size,walking_distance_m
+A1,L,80
+A2,L,120
+B1,M,150
+B2,M,200
+C1,S,250
+C2,S,300
