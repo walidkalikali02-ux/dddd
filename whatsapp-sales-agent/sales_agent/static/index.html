@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة تحكم الايجنت</title>
+<style>
+  :root {
+    --bg: #f4f6f8; --card: #ffffff; --text: #1d2730; --muted: #6b7783; --line: #e3e8ec;
+    --brand: #128c7e; --brand-soft: #e3f4f1; --danger: #d64545; --warn: #c98a12; --ok: #1f9d55;
+    --in: #ffffff; --out: #d9fdd3; --chat-bg: #efeae2; --shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1418; --card: #182027; --text: #e6edf2; --muted: #93a1ad; --line: #26313a;
+      --brand: #25b39f; --brand-soft: #143430; --in: #202c33; --out: #005c4b; --chat-bg: #0b141a; --shadow: none; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Tahoma, "Noto Sans Arabic", sans-serif; background: var(--bg); color: var(--text); font-size: 15px; }
+  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 12px 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 18px; margin: 0; margin-inline-end: auto; }
+  nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  nav button { background: none; border: 0; padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); font: inherit; }
+  nav button.active { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+  main { max-width: 1200px; margin: 0 auto; padding: 20px 16px 60px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+  .card h2 { font-size: 15px; margin: 0 0 12px; color: var(--muted); font-weight: 600; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 13px; background: var(--line); }
+  .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .pill.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+  .pill.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+  .pill.bad { color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, transparent); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+  .stat { background: var(--bg); border-radius: 10px; padding: 10px 12px; cursor: pointer; }
+  .stat b { display: block; font-size: 24px; }
+  .stat span { color: var(--muted); font-size: 13px; }
+  .switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .switch:last-child { border-bottom: 0; }
+  .switch small { display: block; color: var(--muted); }
+  .toggle { position: relative; width: 46px; height: 26px; flex: none; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle span { position: absolute; inset: 0; background: var(--line); border-radius: 999px; transition: .2s; cursor: pointer; }
+  .toggle span::after { content: ""; position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: .2s; }
+  .toggle input:checked + span { background: var(--brand); }
+  .toggle input:checked + span::after { inset-inline-start: 23px; }
+  .btn { display: inline-block; background: var(--brand); color: #fff; border: 0; padding: 9px 16px; border-radius: 8px; cursor: pointer; font: inherit; }
+  .btn.secondary { background: var(--bg); color: var(--text); border: 1px solid var(--line); }
+  .btn.danger { background: var(--danger); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  input, select, textarea { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  textarea { width: 100%; resize: vertical; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .toolbar input[type=search] { flex: 1; min-width: 180px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: start; padding: 10px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--bg); }
+  .badge { padding: 2px 8px; border-radius: 6px; font-size: 12px; background: var(--line); }
+  .b-interested, .b-meeting_requested { background: #fff1d6; color: #8a5a00; }
+  .b-won { background: #dcf5e4; color: #146c37; }
+  .b-engaged { background: #dcecff; color: #1d4f91; }
+  .b-opted_out, .b-not_interested { background: #fde2e2; color: #9b2c2c; }
+  .hot { color: var(--danger); font-weight: 600; }
+  .muted { color: var(--muted); }
+  .qr img { width: 240px; max-width: 100%; background: #fff; padding: 8px; border-radius: 8px; }
+  .hidden { display: none !important; }
+  /* conversation drawer */
+  .drawer { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; justify-content: flex-start; z-index: 10; }
+  .drawer .panel { background: var(--card); width: min(720px, 100%); height: 100%; display: flex; flex-direction: column; }
+  .panel-head { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .panel-head h3 { margin: 0 0 4px; font-size: 17px; }
+  .chat { flex: 1; overflow-y: auto; background: var(--chat-bg); padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .msg { max-width: 78%; padding: 7px 10px 4px; border-radius: 10px; white-space: pre-wrap; word-wrap: break-word; box-shadow: var(--shadow); line-height: 1.5; }
+  .msg.in { background: var(--in); align-self: flex-start; }
+  .msg.out { background: var(--out); align-self: flex-end; }
+  .msg small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; text-align: end; }
+  .composer { border-top: 1px solid var(--line); padding: 12px 16px; display: grid; gap: 8px; }
+  .summary { background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 14px; margin-top: 8px; }
+  .alert-item { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .alert-item.unseen { font-weight: 600; }
+  .toast { position: fixed; bottom: 20px; inset-inline-start: 20px; background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 8px; z-index: 20; }
+  @media (max-width: 640px) { header { padding: 10px 16px; } main { padding: 16px 16px 60px; } .msg { max-width: 90%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🤖 ايجنت المبيعات</h1>
+  <span id="waPill" class="pill">...</span>
+  <span id="dryPill" class="pill warn hidden">وضع التجربة</span>
+  <nav>
+    <button data-tab="home" class="active">الرئيسية</button>
+    <button data-tab="leads">العملاء</button>
+    <button data-tab="alerts">التنبيهات <span id="alertCount"></span></button>
+    <button data-tab="profile">ملف النشاط</button>
+  </nav>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section id="tab-home">
+    <div class="grid">
+      <div class="card">
+        <h2>اتصال واتساب</h2>
+        <div id="waBox" class="muted">جاري التحميل...</div>
+      </div>
+      <div class="card">
+        <h2>التشغيل</h2>
+        <label class="switch"><div>التواصل التلقائي<small>يبعت أول رسالة للعملاء الجدد ويتابع مع اللي مردوش</small></div>
+          <span class="toggle"><input type="checkbox" id="f_automation_on"><span></span></span></label>
+        <label class="switch"><div>الرد التلقائي<small>يرد على العملاء لما يبعتوا</small></div>
+          <span class="toggle"><input type="checkbox" id="f_replies_on"><span></span></span></label>
+        <label class="switch"><div>وضع التجربة<small>لما يكون شغال، مفيش أي رسالة بتتبعت فعلا</small></div>
+          <span class="toggle"><input type="checkbox" id="f_dry_run"><span></span></span></label>
+      </div>
+      <div class="card">
+        <h2>النهارده</h2>
+        <div class="stats">
+          <div class="stat"><b id="todayNew">0</b><span>عملاء جدد اتبعتلهم</span></div>
+          <div class="stat"><b id="todaySent">0</b><span>رسالة اتبعتت</span></div>
+        </div>
+        <p class="muted" id="limitsText" style="font-size:13px"></p>
+        <div class="row">
+          <input type="number" id="outreachLimit" min="1" value="5" style="width:80px" title="عدد العملاء">
+          <button class="btn" id="runOutreach">ابعت لعملاء جدد الآن</button>
+          <button class="btn secondary" id="runFollowups">ابعت المتابعات الآن</button>
+        </div>
+        <p class="muted hidden" id="jobRunning" style="font-size:13px">⏳ فيه إرسال شغال دلوقتي (بيستنى بين كل رسالة والتانية)...</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>العملاء حسب الحالة</h2>
+      <div class="stats" id="statusStats"></div>
+    </div>
+  </section>
+
+  <!-- LEADS -->
+  <section id="tab-leads" class="hidden">
+    <div class="card">
+      <div class="toolbar">
+        <input type="search" id="q" placeholder="ابحث بالاسم أو الرقم أو النشاط...">
+        <select id="statusFilter"><option value="">كل الحالات</option></select>
+        <button class="btn secondary" id="toggleAdd">+ إضافة عميل</button>
+        <label class="btn secondary" style="cursor:pointer">⬆ رفع لستة (CSV / Excel)<input type="file" id="importFile" accept=".csv,.xlsx" hidden></label>
+        <a class="btn secondary" href="/api/export.csv" style="text-decoration:none;padding:9px 16px;border-radius:8px;border:1px solid var(--line);color:var(--text)">⬇ تصدير</a>
+      </div>
+      <form id="addForm" class="row hidden" style="margin-bottom:12px">
+        <input name="phone" placeholder="رقم الواتساب *" required>
+        <input name="name" placeholder="الاسم">
+        <input name="business_name" placeholder="اسم النشاط">
+        <input name="business_type" placeholder="نوع النشاط (مطعم، صالون...)">
+        <input name="city" placeholder="المدينة">
+        <input name="notes" placeholder="ملاحظات">
+        <button class="btn">حفظ</button>
+      </form>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>العميل</th><th>النشاط</th><th>الرقم</th><th>الحالة</th><th>الاهتمام</th><th>آخر نشاط</th><th>الايجنت</th></tr></thead>
+          <tbody id="leadsBody"></tbody>
+        </table>
+      </div>
+      <p class="muted" id="leadsEmpty">مفيش عملاء. ارفع لستة العملاء من الزرار اللي فوق.</p>
+    </div>
+  </section>
+
+  <!-- ALERTS -->
+  <section id="tab-alerts" class="hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2>تنبيهات محتاجة منك تتصرف</h2><button class="btn secondary" id="markSeen">تعليم الكل كمقروء</button></div>
+      <div id="alertsList"></div>
+    </div>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="tab-profile" class="hidden">
+    <div class="card">
+      <h2>ملف النشاط - الايجنت بيعتمد عليه في كل كلامه (الخدمات، الأسعار، الأعمال السابقة)</h2>
+      <textarea id="profileText" rows="28" dir="auto"></textarea>
+      <div class="row" style="margin-top:10px"><button class="btn" id="saveProfile">حفظ</button><span class="muted">التعديل بيتطبق فورا على الرسايل الجاية.</span></div>
+    </div>
+  </section>
+</main>
+
+<!-- CONVERSATION DRAWER -->
+<div class="drawer hidden" id="drawer">
+  <div class="panel">
+    <div class="panel-head">
+      <div class="row" style="justify-content:space-between">
+        <h3 id="dName"></h3>
+        <button class="btn secondary" id="dClose">✕</button>
+      </div>
+      <div class="muted" id="dMeta"></div>
+      <div class="row" style="margin-top:8px">
+        <select id="dStatus"></select>
+        <button class="btn secondary" id="dPause"></button>
+        <a class="btn secondary" id="dWaLink" target="_blank" style="text-decoration:none;padding:9px 16px;border-radius:8px;border:1px solid var(--line);color:var(--text)">فتح في واتساب</a>
+        <button class="btn danger" id="dDelete">حذف</button>
+      </div>
+      <div class="summary" id="dSummary"></div>
+    </div>
+    <div class="chat" id="dChat"></div>
+    <div class="composer">
+      <textarea id="dText" rows="3" placeholder="اكتب رسالة للعميل..."></textarea>
+      <div class="row">
+        <button class="btn" id="dSend">إرسال</button>
+        <button class="btn secondary" id="dSuggest">✨ اقترح رد</button>
+        <button class="btn secondary" id="dAgentReply">🤖 خلي الايجنت يرد</button>
+        <label class="muted" style="font-size:13px"><input type="checkbox" id="dPauseAfter" checked> أوقف الايجنت بعد ما أبعت بنفسي</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let LABELS = {}, STATUSES = [], currentLead = null;
+const INTEREST = { hot: "🔥 سخن", warm: "دافي", cold: "بارد" };
+
+function toast(text) {
+  const el = document.createElement("div"); el.className = "toast"; el.textContent = text;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3500);
+}
+async function api(path, opts = {}) {
+  const res = await fetch(path, { headers: opts.body && !(opts.body instanceof FormData) ? { "Content-Type": "application/json" } : {}, ...opts });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || res.statusText);
+  return data;
+}
+function fmt(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleString("ar-EG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+// ---------- tabs ----------
+document.querySelectorAll("nav button").forEach((b) => b.onclick = () => showTab(b.dataset.tab));
+function showTab(tab) {
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+  document.querySelectorAll("main > section").forEach((s) => s.classList.toggle("hidden", s.id !== "tab-" + tab));
+  if (tab === "leads") loadLeads();
+  if (tab === "alerts") loadAlerts();
+  if (tab === "profile") loadProfile();
+}
+
+// ---------- overview ----------
+const WA_TEXT = { ready: ["متصل", "ok"], qr: ["محتاج مسح QR", "warn"], authenticated: ["بيتصل...", "warn"], starting: ["بيبدأ...", "warn"],
+  bridge_offline: ["البريدج مش شغال", "bad"], disconnected: ["اتفصل", "bad"], auth_failure: ["فشل الدخول", "bad"], logged_out: ["خرجت", "bad"], error: ["خطأ", "bad"] };
+async function loadOverview() {
+  let o; try { o = await api("/api/overview"); } catch (e) { return; }
+  LABELS = o.labels; STATUSES = o.statuses;
+  const wa = o.whatsapp || {}; const [txt, cls] = WA_TEXT[wa.status] || [wa.status, "warn"];
+  $("#waPill").className = "pill " + cls; $("#waPill").textContent = "واتساب: " + txt;
+  $("#dryPill").classList.toggle("hidden", !o.flags.dry_run);
+  let box = "";
+  if (wa.status === "ready") box = `<p>✅ متصل بالرقم <bdi dir="ltr"><b>+${esc(wa.me)}</b></bdi></p><button class="btn secondary" id="logoutBtn">تسجيل خروج من واتساب</button>`;
+  else if (wa.status === "qr" && wa.qr) box = `<p>افتح واتساب على موبايلك ← الإعدادات ← الأجهزة المرتبطة ← ربط جهاز، وامسح الكود:</p><div class="qr"><img src="${wa.qr}" alt="QR"></div>`;
+  else if (wa.status === "bridge_offline") box = `<p>برنامج الربط بواتساب (bridge) مش شغال. اتأكد إن Node.js متسطب وإنك شغلت البرنامج من سكريبت التشغيل.</p>`;
+  else box = `<p>الحالة: ${esc(txt)} ${wa.lastError ? `<br><small class="muted">${esc(wa.lastError)}</small>` : ""}</p>`;
+  if (o.flags.dry_run) box += `<p class="muted" style="font-size:13px">⚠️ وضع التجربة شغال: الرسايل بتتسجل بس مش بتتبعت. اقفله من "التشغيل" لما تكون جاهز.</p>`;
+  if ($("#waBox").dataset.html !== box) { $("#waBox").innerHTML = box; $("#waBox").dataset.html = box; const lb = $("#logoutBtn"); if (lb) lb.onclick = logoutWa; }
+  for (const k of ["automation_on", "replies_on", "dry_run"]) $("#f_" + k).checked = o.flags[k];
+  $("#todayNew").textContent = `${o.today.new_contacts} من ${o.limits.max_new_contacts_per_day}`;
+  $("#todaySent").textContent = o.today.messages_sent;
+  $("#limitsText").textContent = `ساعات الإرسال: ${o.limits.send_hours} ${o.limits.in_send_window ? "(دلوقتي مسموح)" : "(دلوقتي برة المواعيد)"} • أقصى متابعات: ${o.limits.max_followups}`;
+  $("#jobRunning").classList.toggle("hidden", !o.job_running);
+  $("#runOutreach").disabled = $("#runFollowups").disabled = o.job_running;
+  $("#alertCount").textContent = o.unseen_alerts ? `(${o.unseen_alerts})` : "";
+  $("#statusStats").innerHTML = STATUSES.map((s) => `<div class="stat" data-status="${s}"><b>${o.counts[s] || 0}</b><span>${esc(LABELS[s])}</span></div>`).join("");
+  document.querySelectorAll("#statusStats .stat").forEach((el) => el.onclick = () => { $("#statusFilter").value = el.dataset.status; showTab("leads"); });
+  const sf = $("#statusFilter");
+  if (sf.options.length === 1) STATUSES.forEach((s) => sf.add(new Option(LABELS[s], s)));
+  if ($("#dStatus").options.length === 0) STATUSES.forEach((s) => $("#dStatus").add(new Option(LABELS[s], s)));
+}
+for (const k of ["automation_on", "replies_on", "dry_run"]) {
+  $("#f_" + k).onchange = async (e) => {
+    if (k === "dry_run" && !e.target.checked && !confirm("متأكد؟ كده الرسايل هتتبعت فعلا للعملاء من رقمك.")) { e.target.checked = true; return; }
+    await api("/api/flags", { method: "POST", body: JSON.stringify({ [k]: e.target.checked }) }); toast("اتحفظ"); loadOverview();
+  };
+}
+$("#runOutreach").onclick = async () => {
+  try { await api(`/api/run/outreach?limit=${Number($("#outreachLimit").value) || 1}`, { method: "POST" }); toast("بدأ الإرسال للعملاء الجدد"); loadOverview(); } catch (e) { toast(e.message); }
+};
+$("#runFollowups").onclick = async () => {
+  try { await api("/api/run/followups", { method: "POST" }); toast("بدأ إرسال المتابعات"); loadOverview(); } catch (e) { toast(e.message); }
+};
+async function logoutWa() { if (confirm("تسجيل خروج واتساب من الايجنت؟")) { await api("/api/whatsapp/logout", { method: "POST" }).catch((e) => toast(e.message)); loadOverview(); } }
+
+// ---------- leads ----------
+let searchTimer;
+$("#q").oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadLeads, 300); };
+$("#statusFilter").onchange = loadLeads;
+$("#toggleAdd").onclick = () => $("#addForm").classList.toggle("hidden");
+$("#addForm").onsubmit = async (e) => {
+  e.preventDefault();
+  try { await api("/api/leads", { method: "POST", body: JSON.stringify(Object.fromEntries(new FormData(e.target))) }); e.target.reset(); toast("اتضاف"); loadLeads(); }
+  catch (err) { toast(err.message); }
+};
+$("#importFile").onchange = async (e) => {
+  const fd = new FormData(); fd.append("file", e.target.files[0]);
+  try { const r = await api("/api/leads/import", { method: "POST", body: fd });
+    toast(`اتضاف ${r.added} عميل، واتحدث ${r.updated}` + (r.skipped.length ? `، واتخطى ${r.skipped.length} رقم غلط` : "")); loadLeads(); }
+  catch (err) { toast(err.message); }
+  e.target.value = "";
+};
+async function loadLeads() {
+  const rows = await api(`/api/leads?q=${encodeURIComponent($("#q").value)}&status=${$("#statusFilter").value}`);
+  $("#leadsEmpty").classList.toggle("hidden", rows.length > 0);
+  $("#leadsBody").innerHTML = rows.map((l) => `<tr data-id="${l.id}">
+    <td><b>${esc(l.name || "—")}</b></td>
+    <td>${esc(l.business_name)} <span class="muted">${esc(l.business_type)}</span></td>
+    <td dir="ltr" style="text-align:end">+${esc(l.phone)}</td>
+    <td><span class="badge b-${l.status}">${esc(LABELS[l.status] || l.status)}</span></td>
+    <td class="${l.interest_level === "hot" ? "hot" : ""}">${INTEREST[l.interest_level] || "—"}</td>
+    <td class="muted">${fmt(l.last_inbound_at || l.last_outbound_at)}</td>
+    <td>${l.paused ? "⏸ موقوف" : "▶ شغال"}</td></tr>`).join("");
+  document.querySelectorAll("#leadsBody tr").forEach((tr) => tr.onclick = () => openLead(Number(tr.dataset.id)));
+}
+
+// ---------- conversation ----------
+async function openLead(id) { currentLead = id; $("#drawer").classList.remove("hidden"); $("#dText").value = ""; await refreshLead(); }
+async function refreshLead() {
+  if (!currentLead) return;
+  const { lead, messages } = await api(`/api/leads/${currentLead}`);
+  $("#dName").textContent = lead.name || lead.business_name || "+" + lead.phone;
+  const services = JSON.parse(lead.services || "[]");
+  $("#dMeta").innerHTML = `<bdi dir="ltr">+${esc(lead.phone)}</bdi> • ${esc(lead.business_name)} ${esc(lead.business_type)} ${esc(lead.city)}
+    ${services.length ? "• مهتم بـ: " + esc(services.join("، ")) : ""} • متابعات: ${lead.followups_sent} • المتابعة الجاية: ${fmt(lead.next_followup_at)}`;
+  $("#dStatus").value = lead.status;
+  $("#dPause").textContent = lead.paused ? "▶ شغّل الايجنت مع العميل" : "⏸ أوقف الايجنت (هرد بنفسي)";
+  $("#dPause").dataset.paused = lead.paused;
+  $("#dWaLink").href = `https://wa.me/${lead.phone}`;
+  $("#dSummary").innerHTML = `<b>ملخص الايجنت:</b> ${esc(lead.agent_summary || "لسه مفيش")} ${lead.notes ? `<br><b>ملاحظاتك:</b> ${esc(lead.notes)}` : ""}`;
+  const chat = $("#dChat"); const atBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 40;
+  chat.innerHTML = messages.length ? messages.map((m) => `<div class="msg ${m.direction}">${esc(m.body)}<small>${m.kind === "manual" ? "انت • " : m.direction === "out" ? "الايجنت • " : ""}${fmt(m.created_at)}</small></div>`).join("")
+    : `<p class="muted" style="text-align:center">مفيش رسايل لسه</p>`;
+  if (atBottom || !chat.dataset.loaded) chat.scrollTop = chat.scrollHeight; chat.dataset.loaded = "1";
+}
+$("#dClose").onclick = () => { $("#drawer").classList.add("hidden"); currentLead = null; $("#dChat").dataset.loaded = ""; loadLeads(); };
+$("#drawer").onclick = (e) => { if (e.target.id === "drawer") $("#dClose").onclick(); };
+$("#dStatus").onchange = async (e) => { await api(`/api/leads/${currentLead}`, { method: "PATCH", body: JSON.stringify({ status: e.target.value }) }); toast("اتحفظ"); };
+$("#dPause").onclick = async () => {
+  await api(`/api/leads/${currentLead}`, { method: "PATCH", body: JSON.stringify({ paused: $("#dPause").dataset.paused !== "1" }) }); refreshLead();
+};
+$("#dDelete").onclick = async () => { if (confirm("حذف العميل ده وكل رسايله من الايجنت؟")) { await api(`/api/leads/${currentLead}`, { method: "DELETE" }); $("#dClose").onclick(); } };
+$("#dSend").onclick = async () => {
+  const text = $("#dText").value.trim(); if (!text) return;
+  $("#dSend").disabled = true;
+  try { await api(`/api/leads/${currentLead}/send`, { method: "POST", body: JSON.stringify({ text, pause_agent: $("#dPauseAfter").checked }) }); $("#dText").value = ""; refreshLead(); }
+  catch (e) { toast(e.message); } finally { $("#dSend").disabled = false; }
+};
+$("#dSuggest").onclick = async () => {
+  $("#dSuggest").disabled = true; $("#dSuggest").textContent = "بيفكر...";
+  try { const d = await api(`/api/leads/${currentLead}/suggest`, { method: "POST" }); $("#dText").value = d.message || ""; if (d.owner_alert) toast(d.owner_alert); }
+  catch (e) { toast(e.message); } finally { $("#dSuggest").disabled = false; $("#dSuggest").textContent = "✨ اقترح رد"; }
+};
+$("#dAgentReply").onclick = async () => {
+  if (!confirm("الايجنت هيكتب رد ويبعته للعميل على طول. تكمل؟")) return;
+  $("#dAgentReply").disabled = true;
+  try { const r = await api(`/api/leads/${currentLead}/agent-reply`, { method: "POST" }); toast(r.sent ? "اتبعت" : "الايجنت قرر ميردش دلوقتي"); refreshLead(); }
+  catch (e) { toast(e.message); } finally { $("#dAgentReply").disabled = false; }
+};
+
+// ---------- alerts ----------
+async function loadAlerts() {
+  const rows = await api("/api/alerts");
+  $("#alertsList").innerHTML = rows.length ? rows.map((a) => `<div class="alert-item ${a.seen ? "" : "unseen"}">${esc(a.text)}
+    <div class="muted" style="font-size:12px">${fmt(a.created_at)} ${a.lead_id ? `• <a href="#" data-lead="${a.lead_id}">افتح المحادثة</a>` : ""}</div></div>`).join("")
+    : `<p class="muted">مفيش تنبيهات.</p>`;
+  document.querySelectorAll("[data-lead]").forEach((a) => a.onclick = (e) => { e.preventDefault(); openLead(Number(a.dataset.lead)); });
+}
+$("#markSeen").onclick = async () => { await api("/api/alerts/seen", { method: "POST" }); loadAlerts(); loadOverview(); };
+
+// ---------- profile ----------
+async function loadProfile() { $("#profileText").value = (await api("/api/profile")).text; }
+$("#saveProfile").onclick = async () => { await api("/api/profile", { method: "PUT", body: JSON.stringify({ text: $("#profileText").value }) }); toast("اتحفظ ملف النشاط"); };
+
+loadOverview();
+setInterval(loadOverview, 5000);
+setInterval(() => { if (currentLead) refreshLead(); }, 5000);
+</script>
+</body>
+</html>

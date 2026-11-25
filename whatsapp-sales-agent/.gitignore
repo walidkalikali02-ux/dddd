@@ -1,0 +1,9 @@
+.env
+data/
+__pycache__/
+*.pyc
+.pytest_cache/
+bridge/node_modules/
+bridge/.wwebjs_auth/
+bridge/.wwebjs_cache/
+.wwebjs_cache/
