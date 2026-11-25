@@ -28,21 +28,26 @@
 
 البرنامج لازم يشتغل على **جهازك** (لابتوب أو كمبيوتر)، لأنه بيفتح واتساب ويب ومحتاج تمسح كود QR من موبايلك.
 
-1. سطّب **Python 3.10 أو أحدث** من [python.org](https://www.python.org/downloads/). على ويندوز علّم على **Add Python to PATH**.
-2. سطّب **Node.js** (نسخة LTS) من [nodejs.org](https://nodejs.org).
-3. هات مفتاح Claude API من [console.anthropic.com](https://console.anthropic.com) (بتدفع على حسب الاستخدام).
-4. شغّل سكريبت التسطيب:
-   - ويندوز: دبل كليك على `setup_windows.bat`
-   - ماك/لينكس: `./setup.sh`
-5. افتح ملف `.env` (اتعمل تلقائي) وحط فيه:
-   - `ANTHROPIC_API_KEY` = مفتاح Claude
-   - `DEFAULT_COUNTRY_CODE` = كود دولتك (مصر 20، السودان 249، السعودية 966...)
-   - غيّر `BRIDGE_SECRET` لأي كلام عشوائي
-6. افتح `business_profile.md` واكتب بيانات شغلك الحقيقية: الخدمات، الباقات والأسعار (أو "حسب الطلب")، لينك الأعمال السابقة، والخطوة اللي عاوز توصّل العميل ليها. **ده أهم ملف**: الايجنت مش هيقول أي حاجة مش مكتوبة فيه. (تقدر تعدّله بعدين من الداشبورد.)
+### ويندوز (أسهل طريقة)
+1. هات مفتاح Claude API من [console.anthropic.com](https://console.anthropic.com) (API Keys ← Create Key). الاستخدام بتدفعه على حسب الاستهلاك.
+2. نزّل الكود ([ZIP](https://github.com/walidkalikali02-ux/dddd/archive/refs/heads/ccr-bdd9165a-383hyf.zip))، فك الضغط، وادخل فولدر `whatsapp-sales-agent`.
+3. دبل كليك على **`install_windows.bat`**. البرنامج ده:
+   - بيسطّب Python و Node.js لو مش موجودين،
+   - وبينزّل كل المكتبات،
+   - وبيسألك على مفتاح Claude وكود دولتك،
+   - وبيعمل اختصار على سطح المكتب اسمه **WhatsApp Sales Agent**.
+
+   لو ويندوز ظهرلك تحذير "Windows protected your PC"، دوس **More info** وبعدين **Run anyway**.
+
+### ماك / لينكس
+سطّب [Python](https://www.python.org/downloads/) و [Node.js](https://nodejs.org)، وبعدين شغّل `./setup.sh`، وافتح ملف `.env` وحط فيه `ANTHROPIC_API_KEY` و `DEFAULT_COUNTRY_CODE`.
+
+### في الحالتين
+افتح `business_profile.md` واكتب بيانات شغلك الحقيقية: الخدمات، الباقات والأسعار (أو "حسب الطلب")، لينك الأعمال السابقة، والخطوة اللي عاوز توصّل العميل ليها. **ده أهم ملف**: الايجنت مش هيقول أي حاجة مش مكتوبة فيه. (تقدر تعدّله بعدين من الداشبورد.)
 
 ## التشغيل
 
-- ويندوز: دبل كليك على `start_windows.bat`
+- ويندوز: دبل كليك على اختصار **WhatsApp Sales Agent** على سطح المكتب (أو `start_windows.bat`)
 - ماك/لينكس: `./start.sh`
 
 هيفتح:
